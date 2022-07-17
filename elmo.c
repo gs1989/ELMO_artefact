@@ -623,6 +623,7 @@ if(registerdataflow && DBUG) fprintf(stderr,"write32(0x%08X,0x%08X)\n",addr,data
                         }
                     }
                     else{
+                    //printf("cycle_count=%d\n",cycle_count);
 #ifdef POWERMODEL_HW
                         hwpowermodel();
 #else
@@ -4219,6 +4220,10 @@ int main ( int argc, char *argv[] )
     EffectiveSize=EFFECTIVESIZE;
     Statistical_alpha=TVLA_ALPHA;
     Statistical_beta=TVLA_BETA;
+    noise_std=0;//No noise
+    random_interval=0;//No random delay
+    random_delay=0;//If delay happens, delay for xxx cycles
+    cycle_count=0;//cycle count from the trigger pulled up
     N=NUMTRACES;
     output_vcd=0;
     for(ra=0;ra<(unsigned)argc;ra++)
@@ -4242,6 +4247,18 @@ int main ( int argc, char *argv[] )
         }
         if(strcmp(argv[ra],"-starttraceghost")==0){
             sscanf(argv[ra+1], "%d", &tracestart);
+        }
+        if(strcmp(argv[ra],"-noisestd")==0){
+            sscanf(argv[ra+1], "%lf", &noise_std);
+            //printf("noisestd=%lf\n", noise_std);
+        }
+        if(strcmp(argv[ra],"-randominterval")==0){
+            sscanf(argv[ra+1], "%d", &random_interval);
+            // printf("random_interval=%d\n", random_interval);
+        }
+        if(strcmp(argv[ra],"-randomdelay")==0){
+            sscanf(argv[ra+1], "%d", &random_delay);
+            //             printf("random_delay=%d\n", random_delay);
         }
         //Load the number of traces
 #ifdef NTRACE

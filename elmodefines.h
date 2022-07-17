@@ -104,11 +104,15 @@ unsigned long fetches;
 unsigned long reads;
 unsigned long writes;
 unsigned long systick_ints;
+double noise_std;//No noise
+unsigned int random_interval=0;//No random delay
+unsigned int random_delay=0;//If delay happens, delay for xxx cycles
+unsigned int cycle_count=0;//cycle count from the trigger pulled up
 
 /*******************************************************************************************/
 /*ELMO*/
 #define MEMORY_EXTENSION//memory extension that keeps track of the read/write bus
-#define FIXEDVSRANDOM
+//#define FIXEDVSRANDOM
 //#define MASKFLOW
 //#define ENERGYMODEL
 
@@ -142,7 +146,7 @@ unsigned long systick_ints;
 #endif
 #endif
 
-#define COEFFSFILE "coeffs_M3.txt"
+#define COEFFSFILE "coeffs.txt"
 
 #define OUTPUTFOLDER "output"
 #define TRACEFOLDER "output/traces/"
@@ -157,10 +161,10 @@ unsigned long systick_ints;
 #define ASMOUTPUTFILE "asmtrace%05d.txt"
 
 // Change to give path to data file if being used
-#define DATAFILEPATH "Examples/randdata100000.txt"
+#define DATAFILEPATH "inputs.txt"
 
 #define RANDDATAFILE "output/randdata.txt"
-#define UARTOUTFILE "output/printdata.txt"
+#define UARTOUTFILE "outputs.txt"
 
 #define RESISTANCE 360
 #define SUPPLYVOLTAGE 3

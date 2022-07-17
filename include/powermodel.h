@@ -39,6 +39,37 @@
  * Enquiries about further applications and development opportunities
  * are welcome. Please contact elisabeth.oswald@bristol.ac.uk
  */
+#include <math.h>               // Needed for sqrt() and log()
+#include <stdlib.h>
+#define PI         3.14159265   // The value of pi
+double norm(double mean, double std_dev)//from https://cse.usf.edu/~kchriste/tools/gennorm.c
+{
+  double   u, r, theta;           // Variables for Box-Muller method
+  double   x;                     // Normal(0, 1) rv
+  double   norm_rv;               // The adjusted normal rv
+
+  // Generate u
+  u = 0.0;
+  while (u == 0.0)
+    u = (double)rand()/RAND_MAX;
+
+  // Compute r
+  r = sqrt(-2.0 * log(u));
+
+  // Generate theta
+  theta = 0.0;
+  while (theta == 0.0)
+    theta = 2.0 * PI * ((double)rand()/RAND_MAX);
+
+  // Generate x value
+  x = r * cos(theta);
+
+  // Adjust x value for specified mean and variance
+  norm_rv = (x * std_dev) + mean;
+
+  // Return the normally distributed RV value
+  return(norm_rv);
+}
 
 int hweight(unsigned int n)
 {
@@ -78,7 +109,8 @@ void hwpowermodel(){
     char str[500], filepath[500];
     FILE *fp, *fp_nonprofiled;
     double differentialvoltage, supplycurrent, power;
-    
+    double noise=0;
+    int length=0;
     int hw_op1, hw_op2, hd_op1, hd_op2, instructiontype, i, j, count, index = 1;
     double PrvInstr_data = 0, SubInstr_data = 0, Operand1_data = 0, Operand2_data = 0, BitFlip1_data = 0, BitFlip2_data = 0, HWOp1PrvInstr_data = 0, HWOp2PrvInstr_data = 0, HDOp1PrvInstr_data = 0, HDOp2PrvInstr_data = 0, HWOp1SubInstr_data = 0, HWOp2SubInstr_data = 0, HDOp1SubInstr_data = 0, HDOp2SubInstr_data = 0, Operand1_bitinteractions_data = 0, Operand2_bitinteractions_data = 0, BitFlip1_bitinteractions_data = 0, BitFlip2_bitinteractions_data = 0;
     
@@ -99,7 +131,7 @@ void hwpowermodel(){
         fp_nonprofiled = fopen(filepath, "w+");
         
     }
-
+        cycle_count=0;
     while(subsequent->next != NULL){
         
         instructiontype = current->instruction_typedec;
@@ -107,6 +139,11 @@ void hwpowermodel(){
         // Test for key guessing space
         // if(t == 1)
         //  keyflowfailtest(current);
+        if(noise_std>0)
+        	power=norm(0,noise_std);
+        else
+        	power=0;
+        
         
         // Instruction was not profiled
         
@@ -127,8 +164,17 @@ void hwpowermodel(){
             hd_op2 = hdistance(previous->op2, current->op2);
         }
         
-        power = (double)hw_op2;
-        
+        power = power+(double)hw_op2;
+        if(random_interval>0 && (cycle_count%random_delay)==0)
+	{
+
+		length=rand()%random_delay;
+		for(i=0;i<length;i++)
+		{
+			noise=norm(0,noise_std);
+			fprintf(fp,"%0.40f\n",noise);	
+		}
+	}
         if(instructiontype == 2 | instructiontype == 3){
             if(CYCLEACCURATE){
 #ifdef BINARYTRACES
@@ -161,6 +207,7 @@ void hwpowermodel(){
     previous = previous->next;
     current = current->next;
     subsequent = subsequent->next;
+            cycle_count++;
     
 }
 
@@ -179,7 +226,8 @@ void elmopowermodel(){
     char str[500], filepath[500];
     FILE *fp, *fp_nonprofiled;
     double differentialvoltage, supplycurrent, power;
-    
+    double noise=0;
+    int length=0;
     int hw_op1, hw_op2, hd_op1, hd_op2, instructiontype, i, j, count, index = 1;
     double PrvInstr_data = 0, SubInstr_data = 0, Operand1_data = 0, Operand2_data = 0, BitFlip1_data = 0, BitFlip2_data = 0, HWOp1PrvInstr_data = 0, HWOp2PrvInstr_data = 0, HDOp1PrvInstr_data = 0, HDOp2PrvInstr_data = 0, HWOp1SubInstr_data = 0, HWOp2SubInstr_data = 0, HDOp1SubInstr_data = 0, HDOp2SubInstr_data = 0, Operand1_bitinteractions_data = 0, Operand2_bitinteractions_data = 0, BitFlip1_bitinteractions_data = 0, BitFlip2_bitinteractions_data = 0;
     #ifdef MEMORY_EXTENSION
@@ -202,6 +250,7 @@ void elmopowermodel(){
         fp_nonprofiled = fopen(filepath, "w+");
         
     }
+    cycle_count=0;
 
     while(subsequent->next != NULL){
         
@@ -212,7 +261,10 @@ void elmopowermodel(){
         // Test for key guessing space
        // if(t == 1)
           //  keyflowfailtest(current);
-        
+        if(noise_std>0)
+        	power=norm(0,noise_std);
+        else
+        	power=0;
         // Instruction was not profiled
 
         if(instructiontype == 5){
@@ -322,13 +374,24 @@ void elmopowermodel(){
 #ifdef POWERTRACES
         
         supplycurrent = differentialvoltage/RESISTANCE;
-        power = supplycurrent*SUPPLYVOLTAGE;
+        power = power+supplycurrent*SUPPLYVOLTAGE;
         
 #else
         
-        power = differentialvoltage;
+        power = power+differentialvoltage;
 
 #endif
+	if(random_interval>0 && (cycle_count%random_delay)==0)
+	{
+
+
+		length=rand()%random_delay;
+		for(i=0;i<length;i++)
+		{
+			noise=norm(0,noise_std);
+			fprintf(fp,"%0.40f\n",noise);	
+		}
+	}
         
         if(instructiontype == 2 | instructiontype == 3){
             if(CYCLEACCURATE){
@@ -362,6 +425,7 @@ void elmopowermodel(){
         previous = previous->next;
         current = current->next;
         subsequent = subsequent->next;
+        cycle_count++;
         
 }
     
